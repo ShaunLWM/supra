@@ -1,0 +1,38 @@
+{
+  "name": "supra",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "description": "",
+  "scripts": {
+    "build": "dts-bundle-generator src/index.ts -o dist/index.d.ts --no-banner && bun run build.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "bun"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/wobsoriano/pkg-name#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wobsoriano/pkg-name.git"
+  },
+  "bugs": "https://github.com/wobsoriano/pkg-name/issues",
+  "author": "Robert Soriano <sorianorobertc@gmail.com>",
+  "devDependencies": {
+    "bun-types": "^0.6.5",
+    "dts-bundle-generator": "^8.0.1",
+    "typescript": "^5.0.4"
+  }
+}
