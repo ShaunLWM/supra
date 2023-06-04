@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "ES2015",
+    "module": "ES2015",
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
@@ -9,9 +9,11 @@
     "noUnusedLocals": true,
     "noImplicitAny": true,
     "allowJs": true,
-    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "types": ["bun-types"]
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*"]
 }
