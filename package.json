@@ -1,5 +1,5 @@
 {
-  "name": "supra",
+  "name": "supra.ts",
   "version": "0.0.1-beta.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
