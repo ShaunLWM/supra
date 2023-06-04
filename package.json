@@ -23,13 +23,13 @@
     "bun"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/wobsoriano/pkg-name#readme",
+  "homepage": "https://github.com/ShaunLWM/supra",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wobsoriano/pkg-name.git"
+    "url": "git+https://github.com/ShaunLWM/supra.git"
   },
-  "bugs": "https://github.com/wobsoriano/pkg-name/issues",
-  "author": "Robert Soriano <sorianorobertc@gmail.com>",
+  "bugs": "https://github.com/ShaunLWM/supra/issues",
+  "author": "ShaunLWM",
   "devDependencies": {
     "bun-types": "^0.6.5",
     "dts-bundle-generator": "^8.0.1",
