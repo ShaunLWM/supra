@@ -3,6 +3,11 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { cleanText, wait } from "./lib/Helper";
 
+const DISMISS_ALERT_MESSAGE = [
+  "System is scheduled for maintenance from 00:00 to 06:00. Services will not be available during this period. Please complete your transaction and logout.",
+  "You have opened a new active window. Use this window to navigate. Close all your previous windows as they have become inactive."
+];
+
 type ConstructorOptions = {
   genericSleepTime?: number;
   closeAfterEachRequest?: boolean;
@@ -68,7 +73,7 @@ export class Supra {
     this._page = await this._browser.newPage();
 
     this._page.on('dialog', async dialog => {
-      if (dialog.message() === "You have opened a new active window. Use this window to navigate. Close all your previous windows as they have become inactive.") {
+      if (DISMISS_ALERT_MESSAGE.includes(dialog.message())) {
         await dialog.dismiss();
       }
     });
