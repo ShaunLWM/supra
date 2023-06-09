@@ -17,14 +17,14 @@ type Result = {
 puppeteer.use(StealthPlugin());
 
 export class Supra {
-  private genericSleepTime: number;
-  private closeAfterEachRequest: boolean;
+  private _genericSleepTime: number;
+  private _closeAfterEachRequest: boolean;
   private _page: Page | null = null;
   private _browser: Browser | null = null;
 
   constructor(options: ConstructorOptions) {
-    this.genericSleepTime = options?.genericSleepTime || 500;
-    this.closeAfterEachRequest = options?.closeAfterEachRequest || false;
+    this._genericSleepTime = options?.genericSleepTime || 500;
+    this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -61,13 +61,20 @@ export class Supra {
       });
     }
 
-    if (this.closeAfterEachRequest && this._page) {
+    if (this._closeAfterEachRequest && this._page) {
       await this._page?.close();
     }
 
     this._page = await this._browser.newPage();
+
+    this._page.on('dialog', async dialog => {
+      if (dialog.message() === "You have opened a new active window. Use this window to navigate. Close all your previous windows as they have become inactive.") {
+        await dialog.dismiss();
+      }
+    });
+
     await this._page.goto('https://vrl.lta.gov.sg/lta/vrl/action/pubfunc?ID=EnquireRoadTaxExpDtProxy', { waitUntil: 'networkidle2' });
-    await wait(this.genericSleepTime);
+    await wait(this._genericSleepTime);
     await this._page.type('#vehNoField', licensePlate);
     await this._page.click('#agreeTCbox');
 
