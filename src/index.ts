@@ -5,6 +5,7 @@ import { cleanText, wait } from "./lib/Helper";
 
 type ConstructorOptions = {
   genericSleepTime?: number;
+  closeAfterEachRequest?: boolean;
 }
 
 type Result = {
@@ -17,11 +18,13 @@ puppeteer.use(StealthPlugin());
 
 export class Supra {
   private genericSleepTime: number;
+  private closeAfterEachRequest: boolean;
   private _page: Page | null = null;
   private _browser: Browser | null = null;
 
   constructor(options: ConstructorOptions) {
     this.genericSleepTime = options?.genericSleepTime || 500;
+    this.closeAfterEachRequest = options?.closeAfterEachRequest || false;
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -56,6 +59,10 @@ export class Supra {
         headless: process.env.NODE_ENV !== "dev",
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
+    }
+
+    if (this.closeAfterEachRequest && this._page) {
+      await this._page?.close();
     }
 
     this._page = await this._browser.newPage();
