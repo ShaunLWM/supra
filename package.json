@@ -11,7 +11,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "description": "",
+  "description": "🏎️ OneMotoring car model & road tax scraper",
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "tsc",
@@ -22,7 +22,13 @@
     "dist"
   ],
   "keywords": [
-    "bun"
+    "onemotoring",
+    "singapore",
+    "road tax",
+    "license plate",
+    "car license plate",
+    "car sg",
+    "car singapore"
   ],
   "license": "MIT",
   "homepage": "https://github.com/ShaunLWM/supra",

@@ -1,13 +1,32 @@
-# bun starter
+# supra.ts
 
-## Getting Started
+supra.ts is a simple library to scrape car make/model and road tax expiry from OneMotoring SG.
 
-Click the [Use this template](https://github.com/wobsoriano/bun-lib-starter/generate) button to create a new repository with the contents starter.
+## Installation
 
-OR
+```bash
+npm install supra.ts
+```
 
-Run `bun create wobsoriano/bun-lib-starter ./my-lib`.
+```bash
+yarn add supra.ts
+```
+
+## Usage
+
+```typescript
+import { Supra } from "supra.ts";
+
+const supra = new Supra();
+const { license, carMake, roadTaxExpiry } = await supra.search(PLATE);
+
+```
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
 
 ## License
 
-MIT
+[MIT](https://choosealicense.com/licenses/mit/)
