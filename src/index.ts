@@ -56,6 +56,7 @@ export class Supra {
 
     await this._browser.close();
     this._browser = null;
+    this._page = null;
   }
 
   public async search(licensePlate: string) {
@@ -68,6 +69,7 @@ export class Supra {
 
     if (this._closeAfterEachRequest && this._page) {
       await this._page?.close();
+      this._page = null;
     }
 
     this._page = await this._browser.newPage();
