@@ -54,5 +54,8 @@
   },
   "overrides": {
     "clone-deep": "^4.0.1"
+  },
+  "release": {
+    "branches": ["main"]
   }
 }
