@@ -11,6 +11,7 @@ const DISMISS_ALERT_MESSAGE = [
 type ConstructorOptions = {
   genericSleepTime?: number;
   closeAfterEachRequest?: boolean;
+  headless?: boolean;
 }
 
 type Result = {
@@ -26,10 +27,12 @@ export class Supra {
   private _closeAfterEachRequest: boolean;
   private _page: Page | null = null;
   private _browser: Browser | null = null;
+  private _headless: boolean = true;
 
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
     this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
+    this._headless = options?.headless || true;
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -62,7 +65,7 @@ export class Supra {
   public async search(licensePlate: string) {
     if (!this._browser) {
       this._browser = await puppeteer.launch({
-        headless: process.env.NODE_ENV !== "dev",
+        headless: this._headless ? "new" : false,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
     }
