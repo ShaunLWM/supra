@@ -12,6 +12,7 @@ type ConstructorOptions = {
   genericSleepTime?: number;
   closeAfterEachRequest?: boolean;
   headless?: boolean;
+  screenshotDebugDirectory?: string;
 }
 
 type Result = {
@@ -28,11 +29,13 @@ export class Supra {
   private _page: Page | null = null;
   private _browser: Browser | null = null;
   private _headless: boolean = true;
+  private _screenshotDebugDirectory: string | null = null;
 
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
     this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
     this._headless = options?.headless || true;
+    this._screenshotDebugDirectory = options?.screenshotDebugDirectory || null;
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -88,9 +91,17 @@ export class Supra {
     await this._page.type('#vehNoField', licensePlate);
     await this._page.click('#agreeTCbox');
 
+    if (this._screenshotDebugDirectory) {
+      await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
+    }
+
     const navigationPromise = this._page.waitForNavigation();
     await this._page.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');
     await navigationPromise;
+
+    if (this._screenshotDebugDirectory) {
+      await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_2.png` });
+    }
 
     const [carMake, notFound] = await Promise.allSettled([
       this.getElementText('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-container > div.dt-payment-dtls > div > div.col-xs-5.separated > div:nth-child(2) > p'),
