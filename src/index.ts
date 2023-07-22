@@ -1,5 +1,6 @@
-import { Browser, Page, Puppeteer, PuppeteerLaunchOptions } from "puppeteer";
+import { Browser, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
+import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { cleanText, wait } from "./lib/Helper";
 
@@ -14,6 +15,7 @@ type ConstructorOptions = {
   headless?: boolean;
   screenshotDebugDirectory?: string;
   puppeteerLaunchArgs?: string[];
+  recaptchaKey: string;
 }
 
 type Result = {
@@ -31,7 +33,7 @@ export class Supra {
   private _browser: Browser | null = null;
   private _headless: boolean = true;
   private _screenshotDebugDirectory: string | null = null;
-  private _puppeteerLaunchArgs: string[] = []
+  private _puppeteerLaunchArgs: string[] = [];
 
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
@@ -39,6 +41,14 @@ export class Supra {
     this._headless = options?.headless || true;
     this._screenshotDebugDirectory = options?.screenshotDebugDirectory || null;
     this._puppeteerLaunchArgs = options?.puppeteerLaunchArgs || [];
+    puppeteer.use(RecaptchaPlugin({
+      provider: {
+        id: '2captcha',
+        token: options.recaptchaKey,
+      },
+      visualFeedback: true,
+    })
+    )
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -97,6 +107,8 @@ export class Supra {
     if (this._screenshotDebugDirectory) {
       await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
     }
+
+    await this._page.solveRecaptchas()
 
     const navigationPromise = this._page.waitForNavigation();
     await this._page.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');

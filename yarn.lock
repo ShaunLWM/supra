@@ -2088,7 +2088,7 @@ makeerror@1.0.12:
   dependencies:
     tmpl "1.0.5"
 
-merge-deep@^3.0.1:
+merge-deep@^3.0.1, merge-deep@^3.0.2:
   version "3.0.3"
   resolved "https://registry.npmjs.org/merge-deep/-/merge-deep-3.0.3.tgz"
   integrity sha512-qtmzAS6t6grwEkNrunqTBdn0qKwFgNWvlxUbAV8es9M7Ot1EbyApytCnvE0jALPa46ZpKDUo527kKiaWplmlFA==
@@ -2392,6 +2392,15 @@ puppeteer-core@20.7.3:
     debug "4.3.4"
     devtools-protocol "0.0.1135028"
     ws "8.13.0"
+
+puppeteer-extra-plugin-recaptcha@^3.6.8:
+  version "3.6.8"
+  resolved "https://registry.yarnpkg.com/puppeteer-extra-plugin-recaptcha/-/puppeteer-extra-plugin-recaptcha-3.6.8.tgz#be3644efd421600f3230b7fd2916dbc452c7704f"
+  integrity sha512-AY2HG1ZFlSi4xs+Hy84LtRJ95DIfnbjR3Az64dJGVW8gr/hBAGEWRlXTMzea7YOmxO3Nc8Ak3CcUgjgp1gIu1w==
+  dependencies:
+    debug "^4.1.1"
+    merge-deep "^3.0.2"
+    puppeteer-extra-plugin "^3.2.3"
 
 puppeteer-extra-plugin-stealth@2.11.2:
   version "2.11.2"
