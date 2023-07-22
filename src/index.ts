@@ -1,4 +1,4 @@
-import { Browser, Page } from "puppeteer";
+import { Browser, Page, Puppeteer, PuppeteerLaunchOptions } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { cleanText, wait } from "./lib/Helper";
@@ -13,6 +13,7 @@ type ConstructorOptions = {
   closeAfterEachRequest?: boolean;
   headless?: boolean;
   screenshotDebugDirectory?: string;
+  puppeteerLaunchArgs?: string[];
 }
 
 type Result = {
@@ -30,12 +31,14 @@ export class Supra {
   private _browser: Browser | null = null;
   private _headless: boolean = true;
   private _screenshotDebugDirectory: string | null = null;
+  private _puppeteerLaunchArgs: string[] = []
 
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
     this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
     this._headless = options?.headless || true;
     this._screenshotDebugDirectory = options?.screenshotDebugDirectory || null;
+    this._puppeteerLaunchArgs = options?.puppeteerLaunchArgs || [];
   }
 
   private async getElementText(selector: string): Promise<false | string> {
@@ -69,7 +72,7 @@ export class Supra {
     if (!this._browser) {
       this._browser = await puppeteer.launch({
         headless: this._headless ? "new" : false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized', ...this._puppeteerLaunchArgs]
       });
     }
 
