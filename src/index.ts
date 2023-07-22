@@ -112,6 +112,10 @@ export class Supra {
     ]);
 
     if ((notFound.status === "fulfilled" && notFound.value === "Please note the following:") || carMake.status === "rejected" || (carMake.status === "fulfilled" && !carMake.value)) {
+      const reason = await this.getElementText('#backend-error > table > tbody > tr > td > ul > li');
+      if (reason && reason.startsWith('reCAPTCHA verification unsuccessful')) {
+        throw new Error('reCAPTCHA verification unsuccessful');
+      }
       throw new Error('No results for car license plate');
     }
 
