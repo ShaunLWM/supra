@@ -101,6 +101,7 @@ export class Supra {
     });
 
     await this._page.goto('https://vrl.lta.gov.sg/lta/vrl/action/pubfunc?ID=EnquireRoadTaxExpDtProxy', { waitUntil: 'networkidle2' });
+    await this._page.solveRecaptchas()
     await wait(this._genericSleepTime);
     await this._page.type('#vehNoField', licensePlate);
     await this._page.click('#agreeTCbox');
@@ -109,8 +110,7 @@ export class Supra {
       await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
     }
 
-    await this._page.solveRecaptchas()
-
+    await wait(this._genericSleepTime);
     const navigationPromise = this._page.waitForNavigation();
     await this._page.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');
     await navigationPromise;
