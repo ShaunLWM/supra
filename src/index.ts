@@ -47,6 +47,7 @@ export class Supra {
         token: options.recaptchaKey,
       },
       visualFeedback: true,
+      solveScoreBased: true,
     })
     )
   }
