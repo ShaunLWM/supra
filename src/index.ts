@@ -1,3 +1,4 @@
+import { GhostCursor, createCursor } from "ghost-cursor";
 import { Browser, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
@@ -34,6 +35,7 @@ export class Supra {
   private _headless: boolean = true;
   private _screenshotDebugDirectory: string | null = null;
   private _puppeteerLaunchArgs: string[] = [];
+  private _cursor: GhostCursor | null = null;
 
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
@@ -70,11 +72,12 @@ export class Supra {
   }
 
   public async close() {
-    if (!this._browser) {
+    if (!this._browser && !this._cursor) {
       return;
     }
 
-    await this._browser.close();
+    await this._browser?.close();
+    this._cursor = null;
     this._browser = null;
     this._page = null;
   }
@@ -93,6 +96,7 @@ export class Supra {
     }
 
     this._page = await this._browser.newPage();
+    this._cursor = createCursor(this._page);
 
     this._page.on('dialog', async dialog => {
       if (DISMISS_ALERT_MESSAGE.includes(dialog.message())) {
@@ -104,7 +108,7 @@ export class Supra {
     await this._page.solveRecaptchas()
     await wait(this._genericSleepTime);
     await this._page.type('#vehNoField', licensePlate);
-    await this._page.click('#agreeTCbox');
+    await this._cursor.click('#agreeTCbox');
 
     if (this._screenshotDebugDirectory) {
       await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
@@ -112,7 +116,7 @@ export class Supra {
 
     await wait(this._genericSleepTime);
     const navigationPromise = this._page.waitForNavigation();
-    await this._page.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');
+    await this._cursor.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');
     await navigationPromise;
 
     if (this._screenshotDebugDirectory) {
