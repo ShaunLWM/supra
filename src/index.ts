@@ -1,5 +1,5 @@
 import { GhostCursor, createCursor } from "ghost-cursor";
-import { Browser, Page } from "puppeteer";
+import { Browser, BrowserLaunchArgumentOptions, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
@@ -32,7 +32,7 @@ export class Supra {
   private _closeAfterEachRequest: boolean;
   private _page: Page | null = null;
   private _browser: Browser | null = null;
-  private _headless: boolean = true;
+  private _headless: BrowserLaunchArgumentOptions["headless"];
   private _screenshotDebugDirectory: string | null = null;
   private _puppeteerLaunchArgs: string[] = [];
   private _cursor: GhostCursor | null = null;
@@ -40,9 +40,16 @@ export class Supra {
   constructor(options: ConstructorOptions) {
     this._genericSleepTime = options?.genericSleepTime || 500;
     this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
-    this._headless = options?.headless || true;
+    this._headless = options?.headless ?? true;
     this._screenshotDebugDirectory = options?.screenshotDebugDirectory || null;
-    this._puppeteerLaunchArgs = options?.puppeteerLaunchArgs || [];
+    this._puppeteerLaunchArgs = [
+      '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
+      '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      ...(options?.puppeteerLaunchArgs || [])
+    ];
+
     puppeteer.use(RecaptchaPlugin({
       provider: {
         id: '2captcha',
@@ -86,7 +93,7 @@ export class Supra {
     if (!this._browser) {
       this._browser = await puppeteer.launch({
         headless: this._headless ? "new" : false,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized', ...this._puppeteerLaunchArgs]
+        args: this._puppeteerLaunchArgs
       });
     }
 
@@ -104,8 +111,8 @@ export class Supra {
       }
     });
 
-    await this._page.goto('https://vrl.lta.gov.sg/lta/vrl/action/pubfunc?ID=EnquireRoadTaxExpDtProxy', { waitUntil: 'networkidle2' });
-    await this._page.solveRecaptchas()
+    await this._page.goto('https://vrl.lta.gov.sg/lta/vrl/action/enquireRoadTaxExpDtProxy?FUNCTION_ID=F0702025ET', { waitUntil: 'networkidle2' });
+    await this._page.solveRecaptchas();
     await wait(this._genericSleepTime);
     await this._page.type('#vehNoField', licensePlate);
     await this._cursor.click('#agreeTCbox');
