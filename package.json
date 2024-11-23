@@ -17,7 +17,7 @@
     "prepublishOnly": "tsc",
     "test": "jest",
     "copy-typescript-definitions": "cp src/**/*.d.ts dist",
-    "postinstall": "npx rebrowser-patches@latest patch --packageName puppeteer-core"
+    "prepare": "npx rebrowser-patches@latest patch --packageName puppeteer-core"
   },
   "files": [
     "dist"
