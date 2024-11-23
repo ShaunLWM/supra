@@ -92,7 +92,7 @@ export class Supra {
   public async search(licensePlate: string) {
     if (!this._browser) {
       this._browser = await puppeteer.launch({
-        headless: this._headless ? "new" : false,
+        headless: this._headless || "shell",
         args: this._puppeteerLaunchArgs
       });
     }
