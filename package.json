@@ -16,8 +16,7 @@
     "build": "tsc",
     "prepublishOnly": "tsc",
     "test": "jest",
-    "copy-typescript-definitions": "cp src/**/*.d.ts dist",
-    "prepare": "npx rebrowser-patches@latest patch --packageName puppeteer-core"
+    "copy-typescript-definitions": "cp src/**/*.d.ts dist"
   },
   "files": [
     "dist"
@@ -49,7 +48,7 @@
   },
   "dependencies": {
     "ghost-cursor": "^1.3.0",
-    "puppeteer": "23.6.1",
+    "puppeteer": "npm:rebrowser-puppeteer@23.10.3",
     "puppeteer-extra": "3.3.6",
     "puppeteer-extra-plugin-recaptcha": "^3.6.8",
     "puppeteer-extra-plugin-stealth": "2.11.2"
