@@ -1,154 +1,99 @@
-import { GhostCursor, createCursor } from "ghost-cursor";
-import { Browser, BrowserLaunchArgumentOptions, Page } from "puppeteer";
-import puppeteer from "puppeteer-extra";
-import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { cleanText, wait } from "./lib/Helper";
+import { Camoufox, type LaunchOptions } from "camoufox-js";
+import type { Browser, BrowserContext, Page } from "playwright-core";
+import { cleanText } from "./lib/Helper";
 
-const DISMISS_ALERT_MESSAGE = [
-  "System is scheduled for maintenance from 00:00 to 06:00. Services will not be available during this period. Please complete your transaction and logout.",
-  "You have opened a new active window. Use this window to navigate. Close all your previous windows as they have become inactive."
-];
+const PAGE_URL = 'https://vrl.lta.gov.sg/vrls/app/ao/enq-rtx-exp-dt-proxy';
 
-type ConstructorOptions = {
-  genericSleepTime?: number;
+export type ConstructorOptions = {
   closeAfterEachRequest?: boolean;
   headless?: boolean;
   screenshotDebugDirectory?: string;
-  puppeteerLaunchArgs?: string[];
-  recaptchaKey: string;
+  camoufoxOptions?: Partial<LaunchOptions>;
 }
 
-type Result = {
+export type Result = {
   license: string;
   carMake: string;
   roadTaxExpiry?: string;
 }
 
-puppeteer.use(StealthPlugin());
-
 export class Supra {
-  private _genericSleepTime: number;
   private _closeAfterEachRequest: boolean;
   private _page: Page | null = null;
   private _browser: Browser | null = null;
-  private _headless: BrowserLaunchArgumentOptions["headless"];
+  private _context: BrowserContext | null = null;
+  private _headless: boolean;
   private _screenshotDebugDirectory: string | null = null;
-  private _puppeteerLaunchArgs: string[] = [];
-  private _cursor: GhostCursor | null = null;
+  private _camoufoxOptions: Partial<LaunchOptions>;
 
-  constructor(options: ConstructorOptions) {
-    this._genericSleepTime = options?.genericSleepTime || 500;
+  constructor(options: ConstructorOptions = {}) {
     this._closeAfterEachRequest = options?.closeAfterEachRequest || false;
     this._headless = options?.headless ?? true;
     this._screenshotDebugDirectory = options?.screenshotDebugDirectory || null;
-    this._puppeteerLaunchArgs = [
-      '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
-      '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end',
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      ...(options?.puppeteerLaunchArgs || [])
-    ];
-
-    puppeteer.use(RecaptchaPlugin({
-      provider: {
-        id: '2captcha',
-        token: options.recaptchaKey,
-      },
-      visualFeedback: true,
-      solveScoreBased: true,
-    })
-    )
-  }
-
-  private async getElementText(selector: string): Promise<false | string> {
-    if (!this._page) {
-      return false;
-    }
-
-    try {
-      const node = await this._page.waitForSelector(selector, { timeout: 1500 });
-      if (!node) {
-        return false;
-      }
-
-      return node.evaluate(el => el.textContent as string)
-    } catch (error) {
-      return false;
-    }
+    this._camoufoxOptions = options?.camoufoxOptions || {};
   }
 
   public async close() {
-    if (!this._browser && !this._cursor) {
+    if (!this._browser) {
       return;
     }
 
-    await this._browser?.close();
-    this._cursor = null;
+    await this._browser.close();
     this._browser = null;
+    this._context = null;
     this._page = null;
   }
 
   public async search(licensePlate: string) {
     if (!this._browser) {
-      this._browser = await puppeteer.launch({
-        headless: this._headless || "shell",
-        args: this._puppeteerLaunchArgs
+      this._browser = await Camoufox({
+        headless: this._headless,
+        ...this._camoufoxOptions,
       });
     }
 
-    if (this._closeAfterEachRequest && this._page) {
-      await this._page?.close();
+    if (this._closeAfterEachRequest && this._context) {
+      await this._context.close();
+      this._context = null;
       this._page = null;
     }
 
-    this._page = await this._browser.newPage();
-    this._cursor = createCursor(this._page);
+    this._context = await this._browser!.newContext({ viewport: null });
+    this._page = await this._context.newPage();
 
-    this._page.on('dialog', async dialog => {
-      if (DISMISS_ALERT_MESSAGE.includes(dialog.message())) {
-        await dialog.dismiss();
-      }
-    });
-
-    await this._page.goto('https://vrl.lta.gov.sg/lta/vrl/action/enquireRoadTaxExpDtProxy?FUNCTION_ID=F0702025ET', { waitUntil: 'networkidle2' });
-    await this._page.solveRecaptchas();
-    await wait(this._genericSleepTime);
-    await this._page.type('#vehNoField', licensePlate);
-    await this._cursor.click('#agreeTCbox');
+    await this._page.goto(PAGE_URL, { waitUntil: 'networkidle' });
+    await this._page.fill('#vehicleNo', licensePlate);
+    await this._page.evaluate(() => document.querySelector<HTMLInputElement>('#checkboxId_agreeTC_true')?.click());
 
     if (this._screenshotDebugDirectory) {
       await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
     }
 
-    await wait(this._genericSleepTime);
-    const navigationPromise = this._page.waitForNavigation();
-    await this._cursor.click('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-btn-group > button');
-    await navigationPromise;
+    await this._page.evaluate(() => document.querySelector<HTMLButtonElement>('#submitWithRecaptchaBtn')?.click());
+
+    const result = await Promise.race([
+      this._page.waitForSelector('#vehicleMakeModelFieldDisplay').then(() => 'success' as const),
+      this._page.waitForSelector('.alert-error').then(() => 'error' as const),
+    ]);
 
     if (this._screenshotDebugDirectory) {
       await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_2.png` });
     }
 
-    const [carMake, notFound] = await Promise.allSettled([
-      this.getElementText('#main-content > div.dt-container > div:nth-child(2) > form > div.dt-container > div.dt-payment-dtls > div > div.col-xs-5.separated > div:nth-child(2) > p'),
-      this.getElementText('#backend-error > table > tbody > tr > td > p')
-    ]);
-
-    if ((notFound.status === "fulfilled" && notFound.value === "Please note the following:") || carMake.status === "rejected" || (carMake.status === "fulfilled" && !carMake.value)) {
-      const reason = await this.getElementText('#backend-error > table > tbody > tr > td > ul > li');
-      if (reason && reason.startsWith('reCAPTCHA verification unsuccessful')) {
-        throw new Error('reCAPTCHA verification unsuccessful');
-      }
-      throw new Error('No results for car license plate');
+    if (result === 'error') {
+      const reason = await this._page.textContent('.alert-error .message-container');
+      throw new Error(cleanText(reason || 'No results for car license plate'));
     }
 
-    const response: Result = { license: licensePlate, carMake: '' };
+    const carMake = await this._page.textContent('#vehicleMakeModelFieldDisplay span');
+    const roadTaxExpiry = await this._page.textContent('#expiryDateFieldDisplay span');
 
-    response['carMake'] = cleanText(carMake.value || '');
+    const response: Result = {
+      license: licensePlate,
+      carMake: cleanText(carMake || ''),
+      roadTaxExpiry: cleanText(roadTaxExpiry || ''),
+    };
 
-    const roadTaxExpiryText = await this.getElementText("#main-content > div.dt-container > div:nth-child(2) > form > div.dt-container > div.dt-detail-content.dt-usg-dt-wrpr > div > div > p.vrlDT-content-p");
-    response['roadTaxExpiry'] = cleanText(roadTaxExpiryText || '');
     return response;
   }
 }
