@@ -1,14 +1,15 @@
+import { describe, it, expect } from "vitest";
 import { Supra } from "../src";
 
 describe("should", () => {
-  it("export 1", async () => {
-    const bot = new Supra({ recaptchaKey: "" });
+  it("search by license plate", async () => {
+    const bot = new Supra();
     try {
-      const results = await bot.search("ES8U");
+      const results = await bot.search("SNU2913B");
       console.log(results);
-      expect(results.carMake).toBe("ROLLS ROYCE / CULLINAN V12 AUTO");
+      expect(results.carMake).toBe("KIA / STINGER 2.0A 2WD SUNROOF");
     } finally {
-      bot.close();
+      await bot.close();
     }
-  });
+  }, 30000);
 });
