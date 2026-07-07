@@ -66,7 +66,9 @@ export class Supra {
     await this._page.evaluate(() => document.querySelector<HTMLInputElement>('#checkboxId_agreeTC_true')?.click());
 
     if (this._screenshotDebugDirectory) {
-      await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
+      try {
+        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
+      } catch {}
     }
 
     await this._page.evaluate(() => document.querySelector<HTMLButtonElement>('#submitWithRecaptchaBtn')?.click());
@@ -77,7 +79,9 @@ export class Supra {
     ]);
 
     if (this._screenshotDebugDirectory) {
-      await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_2.png` });
+      try {
+        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_2.png` });
+      } catch {}
     }
 
     if (result === 'error') {
