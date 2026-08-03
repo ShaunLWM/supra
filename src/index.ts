@@ -4,6 +4,22 @@ import { cleanText } from "./lib/Helper";
 
 const PAGE_URL = 'https://vrl.lta.gov.sg/vrls/app/ao/enq-rtx-exp-dt-proxy';
 
+export enum SupraErrorCode {
+  MAINTENANCE = 'MAINTENANCE',
+  UNAVAILABLE = 'UNAVAILABLE',
+  SEARCH_ERROR = 'SEARCH_ERROR',
+}
+
+export class SupraError extends Error {
+  public readonly code: SupraErrorCode;
+
+  constructor(code: SupraErrorCode, message: string) {
+    super(message);
+    this.name = 'SupraError';
+    this.code = code;
+  }
+}
+
 export type ConstructorOptions = {
   closeAfterEachRequest?: boolean;
   headless?: boolean;
@@ -62,6 +78,16 @@ export class Supra {
     this._page = await this._context.newPage();
 
     await this._page.goto(PAGE_URL, { waitUntil: 'networkidle' });
+
+    const vehicleInput = await this._page.$('#vehicleNo');
+    if (!vehicleInput) {
+      const bodyText = await this._page.textContent('body') || '';
+      if (/maintenance/i.test(bodyText)) {
+        throw new SupraError(SupraErrorCode.MAINTENANCE, 'Service is currently under maintenance. Please try again later.');
+      }
+      throw new SupraError(SupraErrorCode.UNAVAILABLE, 'Service is currently unavailable. Please try again later.');
+    }
+
     await this._page.fill('#vehicleNo', licensePlate);
     await this._page.evaluate(() => document.querySelector<HTMLInputElement>('#checkboxId_agreeTC_true')?.click());
 
@@ -86,7 +112,7 @@ export class Supra {
 
     if (result === 'error') {
       const reason = await this._page.textContent('.alert-error .message-container');
-      throw new Error(cleanText(reason || 'No results for car license plate'));
+      throw new SupraError(SupraErrorCode.SEARCH_ERROR, cleanText(reason || 'No results for car license plate'));
     }
 
     const carMake = await this._page.textContent('#vehicleMakeModelFieldDisplay span');
