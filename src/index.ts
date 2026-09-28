@@ -1,6 +1,6 @@
 import { Camoufox, type LaunchOptions } from "camoufox-js";
 import type { Browser, BrowserContext, Page } from "playwright-core";
-import { cleanText } from "./lib/Helper";
+import { cleanText, sleep } from "./lib/Helper";
 
 const PAGE_URL = 'https://vrl.lta.gov.sg/vrls/app/ao/enq-rtx-exp-dt-proxy';
 
@@ -99,8 +99,12 @@ export class Supra {
       throw new SupraError(SupraErrorCode.UNAVAILABLE, 'Service is currently unavailable. Please try again later.');
     }
 
+    await this._page.click('#vehicleNo');
+    await sleep(300, 800);
     await this._page.fill('#vehicleNo', plate);
+    await sleep(500, 1200);
     await this._page.evaluate(() => document.querySelector<HTMLInputElement>('#checkboxId_agreeTC_true')?.click());
+    await sleep(400, 1000);
 
     if (this._screenshotDebugDirectory) {
       try {
@@ -108,7 +112,7 @@ export class Supra {
       } catch {}
     }
 
-    await this._page.evaluate(() => document.querySelector<HTMLButtonElement>('#submitWithRecaptchaBtn')?.click());
+    await this._page.click('#submitWithRecaptchaBtn');
 
     const result = await Promise.race([
       this._page.waitForSelector('#vehicleMakeModelFieldDisplay').then(() => 'success' as const),

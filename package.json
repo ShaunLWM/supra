@@ -44,7 +44,7 @@
     "vitest": "^3.2.3"
   },
   "dependencies": {
-    "camoufox-js": "^0.11.1",
+    "camoufox-js": "0.12.0",
     "playwright-core": "*"
   },
   "release": {
