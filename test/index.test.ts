@@ -3,7 +3,7 @@ import { Supra } from "../src";
 
 describe("should", () => {
   it("search by license plate", async () => {
-    const bot = new Supra();
+    const bot = new Supra({ screenshotDebugDirectory: "./test/screenshots" });
     try {
       const results = await bot.search("SNU2913B");
       console.log(results);

@@ -8,6 +8,9 @@ export enum SupraErrorCode {
   MAINTENANCE = 'MAINTENANCE',
   UNAVAILABLE = 'UNAVAILABLE',
   SEARCH_ERROR = 'SEARCH_ERROR',
+  NOT_FOUND = 'NOT_FOUND',
+  INVALID_INPUT = 'INVALID_INPUT',
+  CAPTCHA_FAILED = 'CAPTCHA_FAILED',
 }
 
 export class SupraError extends Error {
@@ -61,9 +64,17 @@ export class Supra {
   }
 
   public async search(licensePlate: string) {
+    const plate = licensePlate.trim().toUpperCase();
+    if (!plate) {
+      throw new SupraError(SupraErrorCode.INVALID_INPUT, `Invalid license plate format: ${licensePlate}`);
+    }
+
     if (!this._browser) {
       this._browser = await Camoufox({
         headless: this._headless,
+        humanize: true,
+        block_webrtc: true,
+        geoip: true,
         ...this._camoufoxOptions,
       });
     }
@@ -88,12 +99,12 @@ export class Supra {
       throw new SupraError(SupraErrorCode.UNAVAILABLE, 'Service is currently unavailable. Please try again later.');
     }
 
-    await this._page.fill('#vehicleNo', licensePlate);
+    await this._page.fill('#vehicleNo', plate);
     await this._page.evaluate(() => document.querySelector<HTMLInputElement>('#checkboxId_agreeTC_true')?.click());
 
     if (this._screenshotDebugDirectory) {
       try {
-        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_1.png` });
+        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${plate}_1.png` });
       } catch {}
     }
 
@@ -106,24 +117,41 @@ export class Supra {
 
     if (this._screenshotDebugDirectory) {
       try {
-        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${licensePlate}_2.png` });
+        await this._page.screenshot({ path: `${this._screenshotDebugDirectory}/${plate}_2.png` });
       } catch {}
     }
 
     if (result === 'error') {
-      const reason = await this._page.textContent('.alert-error .message-container');
-      throw new SupraError(SupraErrorCode.SEARCH_ERROR, cleanText(reason || 'No results for car license plate'));
+      const reason = cleanText(await this._page.textContent('.alert-error .message-container') || '');
+      throw this._classifyError(reason);
     }
 
     const carMake = await this._page.textContent('#vehicleMakeModelFieldDisplay span');
     const roadTaxExpiry = await this._page.textContent('#expiryDateFieldDisplay span');
 
     const response: Result = {
-      license: licensePlate,
+      license: plate,
       carMake: cleanText(carMake || ''),
       roadTaxExpiry: cleanText(roadTaxExpiry || ''),
     };
 
     return response;
+  }
+
+  private _classifyError(message: string): SupraError {
+    if (/no record found/i.test(message)) {
+      return new SupraError(SupraErrorCode.NOT_FOUND, message);
+    }
+
+    if (/security verification/i.test(message)) {
+      this.close();
+      return new SupraError(SupraErrorCode.CAPTCHA_FAILED, message);
+    }
+
+    if (/not valid/i.test(message)) {
+      return new SupraError(SupraErrorCode.INVALID_INPUT, message);
+    }
+
+    return new SupraError(SupraErrorCode.SEARCH_ERROR, message);
   }
 }
