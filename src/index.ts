@@ -75,6 +75,7 @@ export class Supra {
         humanize: true,
         block_webrtc: true,
         geoip: true,
+        os: ['windows', 'macos', 'linux'],
         ...this._camoufoxOptions,
       });
     }
